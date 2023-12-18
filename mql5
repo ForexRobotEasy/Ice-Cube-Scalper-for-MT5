@@ -1,0 +1,66 @@
+mq5
+//+------------------------------------------------------------------+
+//|                                           Ice Cube Scalper.mq5   |
+//|                        Copyright 2022, Forex Robot Easy Team     |
+//|                                   Website: forexroboteasy.com    |
+//+------------------------------------------------------------------+
+
+// Required Libraries
+#include <Trade\Trade.mqh>
+
+// Input Parameters
+input int MaxOrdersForAveraging = 5; // Maximum number of orders for averaging
+input double EquityRiskPercent = 2.0; // Maximum equity risk in percentage
+
+// Global Variables
+CTrade Trade; // Trade object for executing trades
+
+//+------------------------------------------------------------------+
+//| Custom Indicator Initialization Function                         |
+//+------------------------------------------------------------------+
+void OnInit()
+{
+   // Initialize trade object
+   Trade.SetExpertMagicNumber(123456); // Set expert magic number
+   
+   // Subscribe to free signal
+   Trade.SubscribeToSignal('FreeSignal');
+}
+
+//+------------------------------------------------------------------+
+//| Custom Indicator Execution Function                               |
+//+------------------------------------------------------------------+
+void OnTick()
+{
+   // Check if there are enough bars for indicator calculation
+   if (Bars <= 14)
+      return;
+   
+   // Calculate RSI indicator
+   double rsi = iRSI(Symbol(), PERIOD_CURRENT, 14, PRICE_CLOSE, 0);
+   
+   // Check RSI condition for buying
+   if (rsi < 30)
+   {
+      // Calculate lot size based on equity risk percentage
+      double lotSize = NormalizeDouble(AccountEquity() * EquityRiskPercent / 100 / 1000, 2);
+      
+      // Check if maximum number of orders for averaging is reached
+      if (Trade.PositionsTotal() < MaxOrdersForAveraging)
+      {
+         // Open buy position with averaging
+         Trade.PositionOpen(Symbol(), TRADE_ACTION_DEAL, TRADE_VOLUME_SPECIFIED, lotSize, 0, 0, 0, 'Ice Cube Scalper', 123456);
+      }
+   }
+}
+
+//+------------------------------------------------------------------+
+//| Custom Indicator Deinitialization Function                        |
+//+------------------------------------------------------------------+
+void OnDeinit(const int reason)
+{
+   // Unsubscribe from free signal
+   Trade.UnsubscribeFromSignal();
+}
+
+//+------------------------------------------------------------------+
